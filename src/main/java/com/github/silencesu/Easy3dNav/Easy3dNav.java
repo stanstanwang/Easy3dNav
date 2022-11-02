@@ -7,9 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -62,30 +63,41 @@ public class Easy3dNav implements EasyNavFunc {
     }
 
     /**
-     * 初始化寻路需要参数
-     *
-     * @param filePath
+     * 使用url初始化地图数据
+     */
+    public void initByUrl(String url) throws IOException {
+        this.init(new URL(url).openStream());
+    }
+
+    /**
+     * 使用文件初始化地图路径
      */
     public void init(String filePath) throws IOException {
+        this.init(Files.newInputStream(new File(filePath).toPath()));
+    }
 
-        NavMesh mesh = loadNavMesh(filePath);
+    /**
+     * 使用输入流初始化地图数据
+     */
+    public void init(InputStream stream) throws IOException {
+        NavMesh mesh = loadNavMesh(stream);
+        init(mesh);
+    }
 
+
+    private void init(NavMesh mesh) {
         query = new NavMeshQuery(mesh);
         filter = new QueryFilter();
 
         if (printMeshInfo) {
             printMeshInfo(mesh);
         }
-
     }
 
-    private NavMesh loadNavMesh(String meshFile) throws IOException {
-        InputStream inputStream = null;
+    private NavMesh loadNavMesh(InputStream inputStream) throws IOException {
         NavMesh mesh;
         try {
-            //获取文件流
-            inputStream = new FileInputStream(new File(meshFile));
-
+            // 获取文件流
             if (useU3dData) {
                 MeshSetReaderU3d reader = new MeshSetReaderU3d();
                 mesh = reader.read32Bit(inputStream, 6);
@@ -98,7 +110,7 @@ public class Easy3dNav implements EasyNavFunc {
             filter = new QueryFilter();
 
         } finally {
-            //使用完，关闭流
+            // 使用完，关闭流
             try {
                 if (inputStream != null) {
                     inputStream.close();
@@ -106,7 +118,6 @@ public class Easy3dNav implements EasyNavFunc {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
         }
         return mesh;
     }
