@@ -41,7 +41,7 @@ public class Easy3dNav implements EasyNavFunc {
     private QueryFilter filter;
 
     private float[] extents = {2.f, 2.f, 2.f};
-
+    private NavMeshQuery.FRand fRand;
 
     public Easy3dNav() {
 
@@ -86,8 +86,9 @@ public class Easy3dNav implements EasyNavFunc {
 
 
     private void init(NavMesh mesh) {
-        query = new NavMeshQuery(mesh);
-        filter = new QueryFilter();
+        this.query = new NavMeshQuery(mesh);
+        this.filter = new QueryFilter();
+        this.fRand = new NavMeshQuery.FRand();
 
         if (printMeshInfo) {
             printMeshInfo(mesh);
@@ -293,12 +294,28 @@ public class Easy3dNav implements EasyNavFunc {
         return result.getNearestPos();
     }
 
+
+    /*@Override
+    public float[] containsPoly(float[] point, float[] extents) {
+        FindNearestPolyResult result = query.queryPolygons(point, extents, filter);
+        return result.getNearestPos();
+    }*/
+
     @Override
     public Vector3f findNearest(Vector3f point, Vector3f extents) {
         float[] p = findNearest(v3fToFArr(point), v3fToFArr(extents));
         return FArrTov3f(p);
-
      }
+
+
+     public float[] findRandom(){
+         FindRandomPointResult result = query.findRandomPoint(filter, this.fRand);
+         if (!Status.SUCCSESS.equals(result.getStatus())) {
+             return null;
+         }
+         return result.getRandomPt();
+     }
+
 
     private static float[] v3fToFArr(Vector3f vector3f) {
         float[] arr = new float[3];
@@ -312,6 +329,12 @@ public class Easy3dNav implements EasyNavFunc {
         return new Vector3f(point[0], point[1], point[2]);
     }
 
+    public NavMeshQuery getQuery() {
+        return query;
+    }
 
+    public QueryFilter getFilter() {
+        return filter;
+    }
 }
 
